@@ -1,0 +1,12 @@
+# Class-agnostic dataset config for YOLO-seg.
+# OCID is treated as a single foreground class: "object".
+# Paths are relative to this repo root and are filled in by the conversion scripts.
+
+path: ../data/processed        # dataset root (relative to where YOLO is run)
+train: images/train
+val: images/val
+test: images/test
+
+# Single foreground class. We do NOT use OCID semantic categories.
+names:
+  0: object

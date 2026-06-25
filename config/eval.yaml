@@ -1,0 +1,19 @@
+# Evaluation configuration.
+
+segmentation:
+  coco_gt: data/processed/coco_annotations/val.json
+  predictions: outputs/predictions/val_predictions.json
+
+counting:
+  gt_csv: data/processed/counting_gt.csv
+
+measurement:
+  # Self-captured measurement ground truth (physically measured objects).
+  gt_csv: data/samples/self_captured_measurement_gt/measurement_gt.csv
+  pred_csv: outputs/metrics/measurement_results.csv
+  abs_error_tolerance_cm: 2.0
+
+relations:
+  gt_csv: data/samples/relation_labels.csv
+  pred_csv: outputs/metrics/relation_predictions.csv
+  classes: [in_front_of, behind, overlaps, occludes, partially_occluded_by, likely_on_top_of, none]

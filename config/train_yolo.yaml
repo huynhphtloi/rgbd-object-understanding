@@ -1,0 +1,12 @@
+# YOLO-seg training hyperparameters (class-agnostic, one class: object).
+# Used by src/segmentation/train_yolo.py
+
+model: yolov8n-seg.pt          # start small to prove the pipeline; bump to s/m later
+data: config/dataset.yaml
+epochs: 100
+imgsz: 640
+batch: 8
+patience: 30
+seed: 42
+project: outputs/models
+name: rgb_yolo_seg_baseline

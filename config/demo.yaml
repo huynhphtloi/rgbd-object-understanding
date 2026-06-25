@@ -1,0 +1,36 @@
+# Demo + pipeline configuration.
+
+segmentation:
+  # Path to trained class-agnostic weights. If the file does not exist, the
+  # pipeline falls back to a pretrained COCO yolov8 model (treated class-agnostically).
+  weights: outputs/models/rgb_yolo_seg_baseline/weights/best.pt
+  fallback_weights: yolov8n-seg.pt
+  conf: 0.25
+  iou: 0.7
+  imgsz: 640
+  min_mask_area: 200          # pixels; drop tiny masks
+
+depth:
+  # Depth scale converts raw stored depth values to METRES.
+  # OCID depth is stored in millimetres -> scale = 0.001
+  depth_scale: 0.001
+  max_depth_m: 5.0            # clip implausible depth
+  min_depth_m: 0.1
+  remove_plane: true         # RANSAC table-plane removal before measurement
+  plane_dist_thresh_m: 0.01
+  outlier_nb_neighbors: 20
+  outlier_std_ratio: 2.0
+
+counting:
+  conf_thresh: 0.25
+  min_mask_area: 200
+  dup_iou_thresh: 0.8
+  min_valid_depth_ratio: 0.2
+  min_points: 100
+
+relations:
+  overlap_iou_thresh: 0.05    # 2D bbox/mask overlap to consider a pair "interacting"
+  depth_margin_m: 0.02        # min median-depth gap to call in_front_of / behind
+  occlusion_overlap_thresh: 0.15
+  on_top_vertical_frac: 0.15  # subject centroid must be in upper fraction of union
+  on_top_contact_m: 0.05      # max 3D gap to call likely_on_top_of

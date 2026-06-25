@@ -1,0 +1,21 @@
+# Core scientific stack
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+
+# Computer vision / deep learning
+opencv-python>=4.8
+torch>=2.0
+torchvision>=0.15
+ultralytics>=8.1          # YOLOv8/YOLO-seg
+pycocotools>=2.0.6        # COCO-format evaluation
+
+# 3D / point cloud processing
+open3d>=0.17              # point cloud, OBB; numpy fallback exists if unavailable
+
+# Demo + utilities
+gradio>=4.0
+pyyaml>=6.0
+networkx>=3.0             # relation graph
+pandas>=2.0               # metric tables
+tqdm>=4.65

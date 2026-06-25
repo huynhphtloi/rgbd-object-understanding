@@ -1,0 +1,114 @@
+[
+  {
+    "gt_id": 1,
+    "matched": true,
+    "iou": 1.0,
+    "gt_dims_cm": [
+      16.0,
+      12.0,
+      10.0
+    ],
+    "pred_dims_cm": [
+      32.5,
+      22.4,
+      10.1
+    ],
+    "abs_err_cm": [
+      16.55,
+      10.43,
+      0.15
+    ],
+    "rel_err_pct": [
+      103.4,
+      86.9,
+      1.5
+    ],
+    "mean_abs_err_cm": 9.04,
+    "valid_depth_ratio": 1.0,
+    "visibility": "fully_visible"
+  },
+  {
+    "gt_id": 2,
+    "matched": true,
+    "iou": 1.0,
+    "gt_dims_cm": [
+      18.0,
+      12.0,
+      10.0
+    ],
+    "pred_dims_cm": [
+      19.6,
+      16.0,
+      15.4
+    ],
+    "abs_err_cm": [
+      1.55,
+      3.99,
+      5.45
+    ],
+    "rel_err_pct": [
+      8.6,
+      33.2,
+      54.5
+    ],
+    "mean_abs_err_cm": 3.66,
+    "valid_depth_ratio": 1.0,
+    "visibility": "fully_visible"
+  },
+  {
+    "gt_id": 3,
+    "matched": true,
+    "iou": 1.0,
+    "gt_dims_cm": [
+      6.0,
+      6.0,
+      6.0
+    ],
+    "pred_dims_cm": [
+      55.4,
+      17.6,
+      6.2
+    ],
+    "abs_err_cm": [
+      49.44,
+      11.57,
+      0.19
+    ],
+    "rel_err_pct": [
+      824.0,
+      192.8,
+      3.1
+    ],
+    "mean_abs_err_cm": 20.4,
+    "valid_depth_ratio": 1.0,
+    "visibility": "fully_visible"
+  },
+  {
+    "gt_id": 4,
+    "matched": true,
+    "iou": 1.0,
+    "gt_dims_cm": [
+      12.0,
+      10.0,
+      8.0
+    ],
+    "pred_dims_cm": [
+      57.3,
+      12.8,
+      7.1
+    ],
+    "abs_err_cm": [
+      45.27,
+      2.79,
+      0.86
+    ],
+    "rel_err_pct": [
+      377.2,
+      27.9,
+      10.8
+    ],
+    "mean_abs_err_cm": 16.31,
+    "valid_depth_ratio": 1.0,
+    "visibility": "fully_visible"
+  }
+]
