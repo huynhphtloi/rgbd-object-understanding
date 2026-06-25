@@ -19,9 +19,9 @@
       "median_depth_m": 0.85,
       "valid_depth_ratio": 1.0,
       "dimensions_cm": {
-        "width": 19.866,
+        "width": 19.939,
         "height": 13.48,
-        "depth": 10.519
+        "depth": 10.512
       },
       "obb_extent_well_defined": true,
       "visibility_group": "fully_visible"
@@ -43,9 +43,9 @@
       "median_depth_m": 0.99,
       "valid_depth_ratio": 1.0,
       "dimensions_cm": {
-        "width": 18.04,
-        "height": 10.309,
-        "depth": 6.259
+        "width": 18.036,
+        "height": 10.298,
+        "depth": 6.264
       },
       "obb_extent_well_defined": true,
       "visibility_group": "fully_visible"
@@ -91,9 +91,9 @@
       "median_depth_m": 0.679,
       "valid_depth_ratio": 1.0,
       "dimensions_cm": {
-        "width": 12.939,
-        "height": 9.837,
-        "depth": 8.021
+        "width": 12.944,
+        "height": 9.843,
+        "depth": 8.02
       },
       "obb_extent_well_defined": true,
       "visibility_group": "fully_visible"

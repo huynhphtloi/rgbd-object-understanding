@@ -14,16 +14,16 @@
       10.5
     ],
     "abs_err_cm": [
-      3.87,
+      3.94,
       1.48,
-      0.52
+      0.51
     ],
     "rel_err_pct": [
-      24.2,
+      24.6,
       12.3,
-      5.2
+      5.1
     ],
-    "mean_abs_err_cm": 1.95,
+    "mean_abs_err_cm": 1.98,
     "valid_depth_ratio": 1.0,
     "visibility": "fully_visible"
   },
@@ -43,12 +43,12 @@
     ],
     "abs_err_cm": [
       0.04,
-      1.69,
+      1.7,
       3.74
     ],
     "rel_err_pct": [
       0.2,
-      14.1,
+      14.2,
       37.4
     ],
     "mean_abs_err_cm": 1.82,
@@ -103,7 +103,7 @@
       0.02
     ],
     "rel_err_pct": [
-      7.8,
+      7.9,
       1.6,
       0.3
     ],
