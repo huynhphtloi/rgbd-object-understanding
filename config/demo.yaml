@@ -32,5 +32,7 @@ relations:
   overlap_iou_thresh: 0.05    # 2D bbox/mask overlap to consider a pair "interacting"
   depth_margin_m: 0.02        # min median-depth gap to call in_front_of / behind
   occlusion_overlap_thresh: 0.15
-  on_top_vertical_frac: 0.15  # subject centroid must be in upper fraction of union
-  on_top_contact_m: 0.05      # max 3D gap to call likely_on_top_of
+  on_top_vertical_frac: 0.4   # subject centroid must be in upper fraction of union
+  on_top_x_overlap_frac: 0.2  # min horizontal overlap of the two objects
+  on_top_depth_tol_m: 0.08    # stacked objects share similar depth
+  on_top_gap_frac: 0.4        # max image vertical gap (fraction of lower obj height)

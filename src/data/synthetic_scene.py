@@ -2,7 +2,11 @@
 Synthetic RGB-D scene generator.
 
 Builds a small tabletop scene of axis-aligned cuboids with KNOWN dimensions and
-renders an aligned RGB image + metric depth map via point-sampling + z-buffer.
+renders an aligned RGB image + metric depth map. Each cuboid face (and the
+table) is rasterized as a filled polygon; per-pixel depth is computed exactly by
+ray-plane intersection and composited with a z-buffer. This yields hole-free,
+tight instance masks.
+
 Because ground-truth sizes, masks and relations are known, this lets us verify
 the depth-measurement and spatial-relation modules without any real dataset.
 
@@ -13,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import cv2
 import numpy as np
 
 
@@ -32,6 +37,21 @@ DEFAULT_INTRINSICS = {
 TABLE_Y = 0.30          # table surface 30 cm below the optical axis (y is down)
 TABLE_COLOR = (160, 160, 160)
 
+# Cuboid corner offsets (unit cube, multiplied by half-size).
+_CORNERS = np.array([
+    [-1, -1, -1], [+1, -1, -1], [+1, +1, -1], [-1, +1, -1],
+    [-1, -1, +1], [+1, -1, +1], [+1, +1, +1], [-1, +1, +1],
+], dtype=np.float64)
+# Six faces as corner-index quads.
+_FACES = [
+    (0, 1, 2, 3),  # -z (front)
+    (4, 5, 6, 7),  # +z (back)
+    (0, 1, 5, 4),  # -y (top, since y is down)
+    (3, 2, 6, 7),  # +y (bottom)
+    (0, 3, 7, 4),  # -x (left)
+    (1, 2, 6, 5),  # +x (right)
+]
+
 
 def default_scene() -> list[SyntheticObject]:
     """A scene exercising measurement, occlusion and stacking.
@@ -42,47 +62,63 @@ def default_scene() -> list[SyntheticObject]:
     - obj4: box closer to camera, overlapping obj1 in 2D -> in_front_of / occludes
     """
     objs = []
-    # obj1: W12 H16 D10 cm, left side, mid depth
     objs.append(SyntheticObject(1, (-0.14, TABLE_Y - 0.08, 0.90), (0.12, 0.16, 0.10), (60, 180, 75)))
-    # obj2: W18 H10 D12 cm, right side, farther
     objs.append(SyntheticObject(2, (0.13, TABLE_Y - 0.05, 1.05), (0.18, 0.10, 0.12), (230, 160, 50)))
-    # obj3: W6 H6 D6 cm stacked on top of obj2 (obj2 top at y=TABLE_Y-0.10)
     objs.append(SyntheticObject(3, (0.13, TABLE_Y - 0.13, 1.05), (0.06, 0.06, 0.06), (40, 70, 230)))
-    # obj4: W10 H12 D08 cm, closer + slightly left, overlaps obj1 in image
     objs.append(SyntheticObject(4, (-0.06, TABLE_Y - 0.06, 0.72), (0.10, 0.12, 0.08), (200, 80, 200)))
     return objs
 
 
-def _sample_cuboid_surface(center, size, step=0.0025) -> np.ndarray:
-    """Dense point sample over all six faces of an axis-aligned cuboid."""
-    c = np.asarray(center, dtype=np.float64)
-    h = np.asarray(size, dtype=np.float64) / 2.0
-    pts = []
-    for axis in range(3):
-        other = [a for a in range(3) if a != axis]
-        n0 = max(2, int(2 * h[other[0]] / step))
-        n1 = max(2, int(2 * h[other[1]] / step))
-        g0 = np.linspace(c[other[0]] - h[other[0]], c[other[0]] + h[other[0]], n0)
-        g1 = np.linspace(c[other[1]] - h[other[1]], c[other[1]] + h[other[1]], n1)
-        gg0, gg1 = np.meshgrid(g0, g1)
-        for sign in (-1, 1):
-            face = np.zeros((gg0.size, 3))
-            face[:, other[0]] = gg0.ravel()
-            face[:, other[1]] = gg1.ravel()
-            face[:, axis] = c[axis] + sign * h[axis]
-            pts.append(face)
-    return np.concatenate(pts, axis=0)
+def _project(points3d, intr):
+    """Project (N,3) camera-frame points to (N,2) float pixel coords."""
+    z = points3d[:, 2]
+    u = intr["fx"] * points3d[:, 0] / z + intr["cx"]
+    v = intr["fy"] * points3d[:, 1] / z + intr["cy"]
+    return np.stack([u, v], axis=1)
 
 
-def _sample_table(step=0.005) -> np.ndarray:
-    xs = np.arange(-0.6, 0.6, step)
-    zs = np.arange(0.45, 1.7, step)
-    xx, zz = np.meshgrid(xs, zs)
-    pts = np.zeros((xx.size, 3))
-    pts[:, 0] = xx.ravel()
-    pts[:, 1] = TABLE_Y
-    pts[:, 2] = zz.ravel()
-    return pts
+def _rasterize_face(corners3d, color, obj_id, zbuf, idbuf, rgb, intr):
+    """Rasterize one planar quad with exact per-pixel depth + z-buffer compositing."""
+    H, W = zbuf.shape
+    if np.any(corners3d[:, 2] <= 1e-6):
+        return  # skip faces crossing/behind the camera
+
+    pts2d = _project(corners3d, intr)
+    poly = np.round(pts2d).astype(np.int32)
+
+    # pixel coverage of the quad
+    facemask = np.zeros((H, W), dtype=np.uint8)
+    cv2.fillConvexPoly(facemask, poly, 1)
+    ys, xs = np.nonzero(facemask)
+    if len(xs) == 0:
+        return
+
+    # plane through the face: normal n, point p0
+    p0 = corners3d[0]
+    n = np.cross(corners3d[1] - corners3d[0], corners3d[2] - corners3d[0])
+    nn = np.linalg.norm(n)
+    if nn < 1e-12:
+        return
+    n = n / nn
+
+    # ray-plane intersection: point = t*d, t = (n.p0)/(n.d); depth z == t
+    d = np.stack([(xs - intr["cx"]) / intr["fx"],
+                  (ys - intr["cy"]) / intr["fy"],
+                  np.ones_like(xs, dtype=np.float64)], axis=1)
+    denom = d @ n
+    ok = np.abs(denom) > 1e-9
+    t = np.full(len(xs), np.inf)
+    t[ok] = (n @ p0) / denom[ok]
+    z = t  # because d_z == 1
+
+    valid = ok & (z > 1e-6)
+    ys, xs, z = ys[valid], xs[valid], z[valid]
+
+    closer = z < zbuf[ys, xs]
+    ys, xs, z = ys[closer], xs[closer], z[closer]
+    zbuf[ys, xs] = z
+    idbuf[ys, xs] = obj_id
+    rgb[ys, xs] = color
 
 
 def render_scene(
@@ -95,42 +131,34 @@ def render_scene(
 
     Returns
     -------
-    rgb        : (H, W, 3) uint8 (BGR)
-    depth_mm   : (H, W) uint16 metric depth in millimetres (0 = invalid)
-    intr       : intrinsics dict
-    gt         : list of {id, width_cm, height_cm, depth_cm, mask}
+    rgb      : (H, W, 3) uint8 (BGR)
+    depth_mm : (H, W) uint16 metric depth in millimetres (0 = invalid)
+    intr     : intrinsics dict
+    gt       : list of {id, width_cm, height_cm, depth_cm, mask}
     """
     rng = np.random.default_rng(seed)
     objects = objects or default_scene()
     intr = intrinsics or dict(DEFAULT_INTRINSICS)
     H, W = intr["height"], intr["width"]
-    fx, fy, cx, cy = intr["fx"], intr["fy"], intr["cx"], intr["cy"]
 
     zbuf = np.full((H, W), np.inf, dtype=np.float64)
-    idbuf = np.zeros((H, W), dtype=np.int32)         # 0 = table/background
+    idbuf = np.zeros((H, W), dtype=np.int32)
     rgb = np.zeros((H, W, 3), dtype=np.uint8)
 
-    def splat(points, color, obj_id):
-        z = points[:, 2]
-        ok = z > 1e-6
-        u = (fx * points[:, 0] / z + cx).astype(np.int64)
-        v = (fy * points[:, 1] / z + cy).astype(np.int64)
-        inb = ok & (u >= 0) & (u < W) & (v >= 0) & (v < H)
-        u, v, z = u[inb], v[inb], z[inb]
-        # z-buffer: keep nearest surface per pixel
-        for ui, vi, zi in zip(u, v, z):
-            if zi < zbuf[vi, ui]:
-                zbuf[vi, ui] = zi
-                idbuf[vi, ui] = obj_id
-                rgb[vi, ui] = color
+    # table as one large quad on the plane y = TABLE_Y
+    table_quad = np.array([
+        [-0.7, TABLE_Y, 0.45], [0.7, TABLE_Y, 0.45],
+        [0.7, TABLE_Y, 1.8], [-0.7, TABLE_Y, 1.8],
+    ], dtype=np.float64)
+    _rasterize_face(table_quad, TABLE_COLOR, 0, zbuf, idbuf, rgb, intr)
 
-    # table first (farthest fallback), then objects
-    splat(_sample_table(), TABLE_COLOR, 0)
     for obj in objects:
-        splat(_sample_cuboid_surface(obj.center, obj.size), obj.color, obj.id)
-
-    # Fill tiny z-buffer gaps with a 3x3 nearest pass for cleaner masks.
-    _fill_holes(rgb, zbuf, idbuf)
+        c = np.asarray(obj.center)
+        h = np.asarray(obj.size) / 2.0
+        corners = c + _CORNERS * h
+        for face in _FACES:
+            _rasterize_face(corners[list(face)], obj.color, obj.id,
+                            zbuf, idbuf, rgb, intr)
 
     depth_m = np.where(np.isfinite(zbuf), zbuf, 0.0)
     if depth_noise_std_m > 0:
@@ -151,20 +179,3 @@ def render_scene(
             "mask": mask,
         })
     return rgb, depth_mm, intr, gt
-
-
-def _fill_holes(rgb, zbuf, idbuf):
-    """One-pass 3x3 nearest fill for unset pixels surrounded by surface."""
-    H, W = zbuf.shape
-    unset = ~np.isfinite(zbuf)
-    ys, xs = np.nonzero(unset)
-    for y, x in zip(ys, xs):
-        y0, y1 = max(0, y - 1), min(H, y + 2)
-        x0, x1 = max(0, x - 1), min(W, x + 2)
-        nb = zbuf[y0:y1, x0:x1]
-        if np.isfinite(nb).any():
-            local = np.argmin(np.where(np.isfinite(nb), nb, np.inf))
-            ry, rx = np.unravel_index(local, nb.shape)
-            zbuf[y, x] = nb[ry, rx]
-            idbuf[y, x] = idbuf[y0 + ry, x0 + rx]
-            rgb[y, x] = rgb[y0 + ry, x0 + rx]

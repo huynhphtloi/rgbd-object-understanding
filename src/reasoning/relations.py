@@ -41,8 +41,10 @@ DEFAULTS = {
     "overlap_iou_thresh": 0.05,
     "depth_margin_m": 0.02,
     "occlusion_overlap_thresh": 0.15,
-    "on_top_vertical_frac": 0.15,
-    "on_top_contact_m": 0.05,
+    "on_top_vertical_frac": 0.4,
+    "on_top_x_overlap_frac": 0.2,
+    "on_top_depth_tol_m": 0.08,
+    "on_top_gap_frac": 0.4,
 }
 
 
@@ -99,26 +101,37 @@ def infer_pair(a: ObjectInstance, b: ObjectInstance, cfg: dict | None = None) ->
 def _maybe_on_top(a: ObjectInstance, b: ObjectInstance, c: dict) -> Relation | None:
     """Decide whether one object is likely stacked on the other.
 
-    Heuristic: the upper object (smaller vertical fraction) must sit above the
-    other, the two must overlap horizontally, and their 3D centroids must be
-    close (contact). Deliberately hedged as "likely".
+    Robust heuristic (deliberately hedged as "likely"). The upper object must:
+      1. sit in the upper part of the union (smaller image-y),
+      2. overlap the lower object horizontally,
+      3. be at a SIMILAR depth (stacked objects share distance, unlike an
+         in-front/behind pair), and
+      4. be vertically adjacent in the image (its lower edge near the lower
+         object's upper region, i.e. they touch rather than float apart).
+    Uses median depth + image geometry rather than fragile 3D centroids.
     """
     if not (a.has_depth and b.has_depth):
         return None
-    # upper object in the image is the candidate "on top"
     top, bottom = (a, b) if a.centroid_2d[1] <= b.centroid_2d[1] else (b, a)
+
+    # (1) top object high in the union
     if rules.vertical_position_frac(top, bottom) > c["on_top_vertical_frac"]:
         return None
-    if _x_overlap_frac(top, bottom) < 0.2:
+    # (2) horizontal overlap
+    if _x_overlap_frac(top, bottom) < c["on_top_x_overlap_frac"]:
         return None
-    dist = rules.centroid_distance_3d(top, bottom)
-    # contact tolerance grows a little with object size (use bottom's depth extent)
-    tol = c["on_top_contact_m"]
-    if bottom.measurement is not None:
-        tol += 0.5 * bottom.measurement.height_cm / 100.0
-    if dist <= tol:
-        return Relation(top.id, "likely_on_top_of", bottom.id, dist)
-    return None
+    # (3) similar depth (NOT an in-front/behind pair)
+    ddepth = abs(top.median_depth - bottom.median_depth)
+    if ddepth > c["on_top_depth_tol_m"]:
+        return None
+    # (4) vertical adjacency: bottom edge of top object near top object-region
+    #     of the lower object. Gap measured relative to the lower object height.
+    bottom_h = max(1.0, bottom.bbox[3] - bottom.bbox[1])
+    gap = abs(top.bbox[3] - bottom.bbox[1])  # |top.y2 - bottom.y1|
+    if gap > c["on_top_gap_frac"] * bottom_h:
+        return None
+
+    return Relation(top.id, "likely_on_top_of", bottom.id, ddepth)
 
 
 def infer_all(instances: list[ObjectInstance], cfg: dict | None = None) -> list[Relation]:

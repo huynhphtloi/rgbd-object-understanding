@@ -9,21 +9,21 @@
       10.0
     ],
     "pred_dims_cm": [
-      32.5,
-      22.4,
-      10.1
+      19.9,
+      13.5,
+      10.5
     ],
     "abs_err_cm": [
-      16.55,
-      10.43,
-      0.15
+      3.87,
+      1.48,
+      0.52
     ],
     "rel_err_pct": [
-      103.4,
-      86.9,
-      1.5
+      24.2,
+      12.3,
+      5.2
     ],
-    "mean_abs_err_cm": 9.04,
+    "mean_abs_err_cm": 1.95,
     "valid_depth_ratio": 1.0,
     "visibility": "fully_visible"
   },
@@ -37,21 +37,21 @@
       10.0
     ],
     "pred_dims_cm": [
-      19.6,
-      16.0,
-      15.4
+      18.0,
+      10.3,
+      6.3
     ],
     "abs_err_cm": [
-      1.55,
-      3.99,
-      5.45
+      0.04,
+      1.69,
+      3.74
     ],
     "rel_err_pct": [
-      8.6,
-      33.2,
-      54.5
+      0.2,
+      14.1,
+      37.4
     ],
-    "mean_abs_err_cm": 3.66,
+    "mean_abs_err_cm": 1.82,
     "valid_depth_ratio": 1.0,
     "visibility": "fully_visible"
   },
@@ -65,21 +65,21 @@
       6.0
     ],
     "pred_dims_cm": [
-      55.4,
-      17.6,
-      6.2
+      8.4,
+      8.2,
+      5.2
     ],
     "abs_err_cm": [
-      49.44,
-      11.57,
-      0.19
+      2.41,
+      2.22,
+      0.83
     ],
     "rel_err_pct": [
-      824.0,
-      192.8,
-      3.1
+      40.2,
+      37.1,
+      13.9
     ],
-    "mean_abs_err_cm": 20.4,
+    "mean_abs_err_cm": 1.82,
     "valid_depth_ratio": 1.0,
     "visibility": "fully_visible"
   },
@@ -93,21 +93,21 @@
       8.0
     ],
     "pred_dims_cm": [
-      57.3,
-      12.8,
-      7.1
+      12.9,
+      9.8,
+      8.0
     ],
     "abs_err_cm": [
-      45.27,
-      2.79,
-      0.86
+      0.94,
+      0.16,
+      0.02
     ],
     "rel_err_pct": [
-      377.2,
-      27.9,
-      10.8
+      7.8,
+      1.6,
+      0.3
     ],
-    "mean_abs_err_cm": 16.31,
+    "mean_abs_err_cm": 0.37,
     "valid_depth_ratio": 1.0,
     "visibility": "fully_visible"
   }
