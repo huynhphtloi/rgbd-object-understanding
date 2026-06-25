@@ -1,1 +1,1 @@
-"""Gradio demo application."""
+"""Interactive demo application (Streamlit)."""

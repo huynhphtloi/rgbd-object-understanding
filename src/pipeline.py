@@ -4,7 +4,7 @@ End-to-end RGB-D scene-understanding pipeline.
     detections -> counting filter -> object instances (+ measurement)
                -> depth-validity filter -> spatial relations -> scene graph
 
-Shared by the CLI runner (run_pipeline.py) and the Gradio demo so both behave
+Shared by the CLI runner (run_pipeline.py) and the Streamlit demo so both behave
 identically.
 """
 from __future__ import annotations

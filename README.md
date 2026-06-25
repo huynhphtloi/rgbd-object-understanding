@@ -41,8 +41,8 @@ python3 -m pip install -r requirements.txt
 #    before involving any real data.
 python3 -m src.run_pipeline --synthetic --out outputs/demo_results
 
-# 3. Launch the interactive demo
-python3 -m src.app.gradio_app
+# 3. Launch the interactive demo (camera capture + upload)
+streamlit run src/app/streamlit_app.py
 ```
 
 Sample outputs from the synthetic run live in [outputs/demo_results/](outputs/demo_results/).
@@ -70,7 +70,7 @@ src/depth/          back-projection, point clouds, plane removal, dimension esti
 src/reasoning/      object instances, relation rules, relation graph
 src/visualization/  overlays for masks / depth / OBB / graph
 src/evaluation/     segmentation, counting, measurement, relation metrics
-src/app/            Gradio demo
+src/app/            Streamlit demo
 notebooks/          end-to-end Colab walkthrough
 data/               raw + processed datasets (gitignored)
 outputs/            models, predictions, metrics (gitignored except demo_results/)
