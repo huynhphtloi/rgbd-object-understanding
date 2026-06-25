@@ -1,0 +1,54 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Datasets (do not commit raw or processed data) ----
+data/
+*.png.npy
+*.npz
+
+# ---- Model weights & training artifacts ----
+*.pt
+*.pth
+*.onnx
+*.engine
+runs/
+
+# ---- Pipeline outputs (keep only the curated demo showcase) ----
+outputs/
+!outputs/demo_results/
+!outputs/demo_results/**
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
